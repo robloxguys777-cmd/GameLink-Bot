@@ -20,6 +20,8 @@ async def get_roblox_description(user_id):
                 return data.get("description", "")
     return None
 
-def generate_random_emojis(count=6):
-    emojis = ["🍎", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌽", "🥕", "🫑", "🥔", "🍠"]
-    return "".join(random.sample(emojis, count))
+import string
+
+def generate_verification_code(length=12):
+    characters = string.ascii_letters + string.digits
+    return "".join(random.choice(characters) for _ in range(length))
