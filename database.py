@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = "/home/ubuntu/gamelink_bot/gamelink.db"
+DB_PATH = "gamelink.db"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
