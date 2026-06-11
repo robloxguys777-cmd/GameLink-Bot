@@ -32,11 +32,7 @@ class PersistentVerifyView(discord.ui.View):
         game_type = settings[0]
         
         if game_type == "roblox":
-            view = RobloxVerifyView()
-            await interaction.response.send_message("Choose your Roblox verification method:", view=view, ephemeral=True)
-        else:
-            view = ConnectionCheckView(game_type.capitalize())
-            await interaction.response.send_message(f"Please ensure your **{game_type.capitalize()}** account is linked in **Discord Settings > Connections** and is set to **'Display on Profile'**. Once done, click the button below.", view=view, ephemeral=True)
+            await interaction.response.send_modal(RobloxUsernameModal())
 
 bot = GameLinkBot()
 
@@ -55,12 +51,7 @@ async def check_setup(interaction: discord.Interaction):
 @bot.tree.command(name="setup", description="Setup the GameLink bot for this server")
 @app_commands.describe(game="The game platform to verify with", role="The role to give upon verification")
 @app_commands.choices(game=[
-    app_commands.Choice(name="Roblox", value="roblox"),
-    app_commands.Choice(name="Xbox", value="xbox"),
-    app_commands.Choice(name="PlayStation", value="playstation"),
-    app_commands.Choice(name="Steam", value="steam"),
-    app_commands.Choice(name="Epic Games", value="epic"),
-    app_commands.Choice(name="GitHub", value="github")
+    app_commands.Choice(name="Roblox", value="roblox")
 ])
 @app_commands.checks.has_permissions(administrator=True)
 async def setup(interaction: discord.Interaction, game: app_commands.Choice[str], role: discord.Role):
@@ -132,23 +123,7 @@ async def verify(interaction: discord.Interaction):
     game_type = settings[0]
     
     if game_type == "roblox":
-        view = RobloxVerifyView()
-        await interaction.response.send_message("Choose your Roblox verification method:", view=view, ephemeral=True)
-    else:
-        view = ConnectionCheckView(game_type.capitalize())
-        await interaction.response.send_message(f"Please ensure your **{game_type.capitalize()}** account is linked in **Discord Settings > Connections** and is set to **'Display on Profile'**. Once done, click the button below.", view=view, ephemeral=True)
-
-class RobloxVerifyView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="Bio Method", style=discord.ButtonStyle.primary)
-    async def bio_method(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(RobloxUsernameModal())
-
-    @discord.ui.button(label="Discord Connection Method", style=discord.ButtonStyle.secondary)
-    async def connection_method(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("Please ensure your Roblox account is linked in **Discord Settings > Connections** and is set to **'Display on Profile'**. Once done, click the button below.", view=ConnectionCheckView("Roblox"), ephemeral=True)
 
 class RobloxUsernameModal(discord.ui.Modal, title="Roblox Verification"):
     username = discord.ui.TextInput(label="Roblox Username", placeholder="Enter your Roblox username (not display name)", required=True)
@@ -194,33 +169,6 @@ class RobloxBioCheckView(discord.ui.View):
             await interaction.response.send_message(f"Successfully verified as **{username}**! You have been given the verification role.", ephemeral=True)
         else:
             await interaction.response.send_message(f"Could not find the code in your bio. Please make sure you added `{required_emojis}` and try again.", ephemeral=True)
-
-class ConnectionCheckView(discord.ui.View):
-    def __init__(self, game_name):
-        super().__init__(timeout=None)
-        self.game_name = game_name
-
-    @discord.ui.button(label="Check Profile", style=discord.ButtonStyle.success)
-    async def check_profile(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Note: Standard Discord bots CANNOT see a user's connections (even public ones) 
-        # without the user authorizing the bot via OAuth2 with the 'connections' scope.
-        
-        # For this bot, we will simulate the check. In a real production bot like Bloxlink,
-        # the user would be redirected to a website to log in with Discord.
-        
-        await interaction.response.send_message(f"✅ **Verification Successful!**\n\nI have verified your linked **{self.game_name}** account via your Discord profile. You have been granted the verification role.", ephemeral=True)
-        
-        settings = database.get_guild_settings(interaction.guild_id)
-        role = interaction.guild.get_role(settings[1])
-        if role:
-            try:
-                await interaction.user.add_roles(role)
-            except Exception as e:
-                print(f"Error adding role: {e}")
-        
-        # Log the verification in the database using the user's Discord name as a placeholder
-        # since we can't actually see the game username without OAuth2.
-        database.link_user(interaction.user.id, self.game_name.lower(), f"{interaction.user.name}_linked", "N/A")
 
 if __name__ == "__main__":
     bot.run(config.TOKEN)
