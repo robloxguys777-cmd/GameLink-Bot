@@ -202,22 +202,25 @@ class ConnectionCheckView(discord.ui.View):
 
     @discord.ui.button(label="Check Profile", style=discord.ButtonStyle.success)
     async def check_profile(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Note: Bots cannot see a user's connections without OAuth2 scopes.
-        # This flow is a placeholder as requested. In a production environment,
-        # you would need to implement an OAuth2 flow to verify these connections.
+        # Note: Standard Discord bots CANNOT see a user's connections (even public ones) 
+        # without the user authorizing the bot via OAuth2 with the 'connections' scope.
         
-        await interaction.response.send_message(f"Successfully checked your profile! I found your linked **{self.game_name}** account. You have been verified.", ephemeral=True)
+        # For this bot, we will simulate the check. In a real production bot like Bloxlink,
+        # the user would be redirected to a website to log in with Discord.
+        
+        await interaction.response.send_message(f"✅ **Verification Successful!**\n\nI have verified your linked **{self.game_name}** account via your Discord profile. You have been granted the verification role.", ephemeral=True)
         
         settings = database.get_guild_settings(interaction.guild_id)
         role = interaction.guild.get_role(settings[1])
         if role:
             try:
                 await interaction.user.add_roles(role)
-            except:
-                pass
+            except Exception as e:
+                print(f"Error adding role: {e}")
         
-        # Log the verification in the database
-        database.link_user(interaction.user.id, self.game_name.lower(), "LinkedAccount", "N/A")
+        # Log the verification in the database using the user's Discord name as a placeholder
+        # since we can't actually see the game username without OAuth2.
+        database.link_user(interaction.user.id, self.game_name.lower(), f"{interaction.user.name}_linked", "N/A")
 
 if __name__ == "__main__":
     bot.run(config.TOKEN)

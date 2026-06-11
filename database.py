@@ -1,9 +1,13 @@
 import sqlite3
 import os
 
-DB_PATH = "gamelink.db"
+# For Railway persistence, we'll use a data directory that can be mounted as a volume
+DB_DIR = "data"
+DB_PATH = os.path.join(DB_DIR, "gamelink.db")
 
 def init_db():
+    if not os.path.exists(DB_DIR):
+        os.makedirs(DB_DIR)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
